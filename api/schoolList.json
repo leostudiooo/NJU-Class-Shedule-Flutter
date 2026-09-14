@@ -90,11 +90,12 @@
       "targetUrl": "https://ehall.seu.edu.cn/jwapp/sys/bykb/*default/index.do",
       "preExtractJS": "",
       "delayTime": 3,
+      "manualImport": true,
       "extractJS": "",
       "extractJSfileAndroid": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/seubksjw.js",
       "extractJSfileiOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/seubksjw.js",
       "extractJSfileOHOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/seubksjw.js",
-      "banner_content": "导入方式：登陆后自动获取当前学期课表\n注意：如加载失败，请连接东南大学VPN\n试试浏览器访问教务网，没准教务系统又抽风了",
+      "banner_content": "导入方式：登录后点击「更改」选择学期，确认课表无误后点击「确认导入课表」\n注意：如加载失败，请连接东南大学VPN\n学期开始周一会优先从教务接口推算，失败时使用维护值",
       "banner_action": "下载东南大学VPN",
       "banner_url": "https://vpn.seu.edu.cn",
       "class_time_list": [

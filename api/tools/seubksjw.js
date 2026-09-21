@@ -6,6 +6,7 @@ function scheduleHtmlParser() {
     TERM_LIST_API: '/modules/jshkcb/xnxqcx.do',
     SCHEDULE_API: '/modules/xskcb/cxxszhxqkb.do',
     CURRENT_WEEK_API: '/modules/jshkcb/dqzc.do',
+    SEMESTER_CALENDAR_API: '/modules/xskcb/cxxljc.do',
   };
 
   const buildUrl = (path) => {
@@ -55,6 +56,16 @@ function scheduleHtmlParser() {
 
   // 优先使用页面“更改学年学期”中已经选定的学期。
   const getSelectedTermFromDom = () => {
+    const injectedTerm = window.__course_import_selected_term__;
+    if (injectedTerm?.dm || injectedTerm?.DM) {
+      return {
+        DM: injectedTerm.dm || injectedTerm.DM,
+        MC: injectedTerm.name || injectedTerm.MC || '',
+        semester_start_monday:
+          injectedTerm.semester_start_monday || injectedTerm.semesterStartMonday || null,
+      };
+    }
+
     const termEl = document.querySelector('#dqxnxq2');
     const selectedItem = getJqxSelectedItem('#dqxnxq2');
     const termCode =
@@ -90,12 +101,16 @@ function scheduleHtmlParser() {
     }
 
     if (selectedTerm?.DM) {
-      return termRows.find(term => term.DM === selectedTerm.DM) || selectedTerm;
+      return Object.assign(
+        {},
+        termRows.find(term => term.DM === selectedTerm.DM) || {},
+        selectedTerm
+      );
     }
 
     if (selectedTerm?.MC) {
       const matchedByName = termRows.find(term => term.MC === selectedTerm.MC);
-      if (matchedByName) return matchedByName;
+      if (matchedByName) return Object.assign({}, matchedByName, selectedTerm);
     }
 
     try {
@@ -122,6 +137,27 @@ function scheduleHtmlParser() {
     const match = String(termCode || '').match(/^(\d{4}-\d{4})-(.+)$/);
     if (!match) return null;
     return { XN: match[1], XQ: match[2] };
+  };
+
+  const normalizeDateString = (value) => {
+    const match = String(value || '').match(/\d{4}-\d{1,2}-\d{1,2}/);
+    if (!match) return null;
+
+    const [year, month, day] = match[0].split('-');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
+
+  const fetchSemesterStartMonday = (termCode) => {
+    const termParts = parseTermCode(termCode);
+    if (!termParts) return null;
+
+    try {
+      const data = syncRequest(CONFIG.SEMESTER_CALENDAR_API, termParts);
+      const rows = extractRows(data, 'cxxljc');
+      return normalizeDateString(rows[0]?.XQKSRQ);
+    } catch (error) {
+      return null;
+    }
   };
 
   const parseNumber = (value) => {
@@ -281,7 +317,10 @@ function scheduleHtmlParser() {
       .map(transformCourse)
       .filter(course => course !== null); // 过滤无有效周次的课程
 
-    const semesterStartMonday = inferSemesterStartMonday(currentTerm.DM);
+    const semesterStartMonday =
+      normalizeDateString(currentTerm.semester_start_monday || currentTerm.semesterStartMonday) ||
+      fetchSemesterStartMonday(currentTerm.DM) ||
+      inferSemesterStartMonday(currentTerm.DM);
 
     // 步骤3：组装并返回结果
     const result = {

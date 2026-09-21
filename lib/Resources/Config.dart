@@ -15,6 +15,9 @@ class Config {
   static const int REVIEW_DIALOG_DELAY_SECONDS = 10;
   static const int REVIEW_DIALOG_SHOW_TIME = 10;
 
+  static const bool USE_LOCAL_IMPORT_CONFIG =
+      bool.fromEnvironment('USE_LOCAL_IMPORT_CONFIG');
+
   static const Map jw_config = {
     "page_title": "统一认证登录",
     "initialUrl":

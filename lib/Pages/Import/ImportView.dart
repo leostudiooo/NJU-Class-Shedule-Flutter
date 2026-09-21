@@ -5,6 +5,7 @@ import 'package:azlistview/azlistview.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:umeng_common_sdk/umeng_common_sdk.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../Import/ImportFromJWView.dart';
 import '../Import/ImportFromCerView.dart';
 import '../Import/ImportFromXKView.dart';
@@ -238,6 +239,11 @@ class _ImportViewState extends State<ImportView> {
 
   Future<List> getOnlineConfig() async {
     try {
+      if (Config.USE_LOCAL_IMPORT_CONFIG) {
+        final response = await rootBundle.loadString('api/schoolList.json');
+        return json.decode(response)['data'];
+      }
+
       Dio dio = Dio();
       String url = Url.UPDATE_ROOT + '/schoolList.json';
       Response response = await dio.get(url);

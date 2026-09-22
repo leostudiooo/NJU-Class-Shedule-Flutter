@@ -69,6 +69,8 @@ dependencies:
 
 dependency_overrides:
   collection: ^1.19.0
+  # flutter_html 3.0.0 imports html's internal selector API, which changed in 0.15.7.
+  html: 0.15.6
   scrollable_positioned_list: 0.3.2
   url_launcher:
     path: ./external/flutter_packages/packages/url_launcher/url_launcher

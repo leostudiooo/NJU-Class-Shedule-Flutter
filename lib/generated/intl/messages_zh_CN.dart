@@ -55,11 +55,11 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("打开失败，可能是未安装 TIM/QQ"),
         "about_title": MessageLookupByLibrary.simpleMessage("关于"),
         "add_backgound_picture_subtitle":
-            MessageLookupByLibrary.simpleMessage("上传背景图片"),
+            MessageLookupByLibrary.simpleMessage("设置背景图片"),
         "add_backgound_picture_success_toast":
             MessageLookupByLibrary.simpleMessage("更换背景图片成功ww"),
         "add_backgound_picture_title":
-            MessageLookupByLibrary.simpleMessage("上传背景图片"),
+            MessageLookupByLibrary.simpleMessage("设置背景图片"),
         "add_class": MessageLookupByLibrary.simpleMessage("添加课程"),
         "add_class_table_dialog_title":
             MessageLookupByLibrary.simpleMessage("请输入课程表名称"),

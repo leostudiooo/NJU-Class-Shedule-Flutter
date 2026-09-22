@@ -35,6 +35,12 @@
 
 ## 如何支持更多学校
 
+开发说明和维护约定见 [`doc/index.md`](doc/index.md)。该索引由 Git hook 在提交前自动生成。首次使用仓库时执行：
+
+```bash
+sh tool/install_git_hooks.sh
+```
+
 南哪课表解析课程的主要原理是通过打开页面，并通过 JS 脚本获取页面中的课程信息，然后解析出课程的时间、地点、教师等信息。
 
 涉及到的主要文件：
@@ -71,6 +77,23 @@
 }
 
 ```
+
+### 使用本地配置和解析脚本测试导入
+
+开发或调试学校导入时，可以让 App 读取仓库中的本地配置和 JavaScript 解析脚本，而不是读取线上 `schoolList.json` 和 CDN 脚本。实现方式是通过 Dart define 打开 `USE_LOCAL_IMPORT_CONFIG`：
+
+1. 在 `api/schoolList.json` 中添加或修改学校配置。
+2. 将解析脚本放到 `api/tools/<文件名>.js`。这些目录已经作为 Flutter assets 打包。
+3. 在配置的 `extractJSfileAndroid`、`extractJSfileiOS`、`extractJSfileOHOS` 中填写包含相同文件名的 URL，例如 `http://127.0.0.1/njubksxk.js`。本地模式只取 URL 的最后一段文件名，并从 `api/tools/` 加载对应脚本；不要求本地启动 HTTP 服务。
+4. 运行本地配置：
+
+   ```bash
+   yes | fvm flutter run --dart-define=USE_LOCAL_IMPORT_CONFIG=true
+   ```
+
+   如果依赖已经解析完成，也可以加 `--no-pub`，避免测试时改写 `pubspec.lock`。
+
+本地模式仍会在 WebView 中访问学校教务系统，因此需要网络、登录凭据和对应的 VPN/校园网条件。测试完成后，确认没有把仅用于调试的配置或脚本 URL 留在正式配置中。
 
 ## 部署相关
 

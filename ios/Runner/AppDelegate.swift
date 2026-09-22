@@ -3,6 +3,24 @@ import Flutter
 import WidgetKit
 import ActivityKit
 
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+  var window: UIWindow?
+
+  func scene(
+    _ scene: UIScene,
+    willConnectTo session: UISceneSession,
+    options connectionOptions: UIScene.ConnectionOptions
+  ) {
+    guard scene is UIWindowScene,
+          let flutterViewController = window?.rootViewController as? FlutterViewController,
+          let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+      return
+    }
+
+    appDelegate.configureFlutterViewController(flutterViewController)
+  }
+}
+
 @main
 @objc class AppDelegate: FlutterAppDelegate {
   private var widgetDataChannel: FlutterMethodChannel?
@@ -11,10 +29,6 @@ import ActivityKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
-
-    // Set up widget data method channel
-    setupWidgetDataChannel()
     setupSystemTimeChangeObserver()
 
 //     MobClick.handle(url)
@@ -22,6 +36,14 @@ import ActivityKit
 //     UMCommonSwift.setLogEnabled(bFlag: true)
 //     UMConfigure.initWithAppkey("5f9e1afa1c520d30739d2737", channel: "umeng")
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func configureFlutterViewController(_ controller: FlutterViewController) {
+    GeneratedPluginRegistrant.register(with: controller)
+
+    // Set up widget data method channel after the scene has created its
+    // FlutterViewController and its plugin registry is ready.
+    setupWidgetDataChannel(controller)
   }
 
   private func setupSystemTimeChangeObserver() {
@@ -39,12 +61,7 @@ import ActivityKit
     print("🔄 [AppDelegate] Significant time change detected, widget timelines reloaded")
   }
 
-  private func setupWidgetDataChannel() {
-    guard let controller = window?.rootViewController as? FlutterViewController else {
-      print("Failed to get FlutterViewController")
-      return
-    }
-
+  private func setupWidgetDataChannel(_ controller: FlutterViewController) {
     widgetDataChannel = FlutterMethodChannel(
       name: "com.wheretosleepinnju/widget_data",
       binaryMessenger: controller.binaryMessenger

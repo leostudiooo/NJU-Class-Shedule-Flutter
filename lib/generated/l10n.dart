@@ -870,20 +870,20 @@ class S {
     );
   }
 
-  /// `上传背景图片`
+  /// `设置背景图片`
   String get add_backgound_picture_title {
     return Intl.message(
-      '上传背景图片',
+      '设置背景图片',
       name: 'add_backgound_picture_title',
       desc: '',
       args: [],
     );
   }
 
-  /// `上传背景图片`
+  /// `设置背景图片`
   String get add_backgound_picture_subtitle {
     return Intl.message(
-      '上传背景图片',
+      '设置背景图片',
       name: 'add_backgound_picture_subtitle',
       desc: '',
       args: [],

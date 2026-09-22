@@ -1,5 +1,5 @@
-# Define global platform for iOS 13.0 to match deployment target
-platform :ios, '13.0'
+# Xcode 27's iOS 27 Simulator SDK supports deployment targets from iOS 15 onward.
+platform :ios, '15.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -38,16 +38,39 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
       # Disable explicit module builds to fix Xcode 26.0 compatibility issues
       config.build_settings['SWIFT_ENABLE_EXPLICIT_MODULES'] = 'NO'
       config.build_settings['SWIFT_ENABLE_INCREMENTAL_COMPILATION'] = 'NO'
       config.build_settings['SWIFT_COMPILATION_MODE'] = 'wholemodule'
+      # CocoaPods 1.16 carries arm64 exclusions from older ML Kit podspecs
+      # into the aggregate target. All bundled simulator slices are patched
+      # for Apple Silicon, so keep arm64 enabled for every Pod target.
+      config.build_settings.delete('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
+      # umeng_common_sdk 1.2.8 carries an obsolete x86_64-only simulator
+      # restriction. Xcode 27's Apple Silicon simulators require arm64.
+      if target.name == 'umeng_common_sdk'
+        config.build_settings['VALID_ARCHS[sdk=iphonesimulator*]'] = '$(ARCHS_STANDARD)'
+      end
+      # The bundled ML Kit frameworks include arm64 simulator slices, but
+      # their podspecs still advertise the pre-Apple-Silicon exclusion.
     end
   end
   # Project-level fallback for explicit modules
   installer.pods_project.build_configurations.each do |config|
     config.build_settings['SWIFT_ENABLE_EXPLICIT_MODULES'] = 'NO'
+  end
+
+  # Some prebuilt ML Kit podspecs write an arm64 Simulator exclusion directly
+  # into their generated xcconfig files. Keep the setting at i386 only so the
+  # Flutter tool can select the native arm64 simulator engine on Apple Silicon.
+  Dir.glob(File.join(__dir__, 'Pods', 'Target Support Files', '**', '*.xcconfig')).each do |xcconfig_path|
+    contents = File.read(xcconfig_path)
+    contents = contents.gsub(
+      /^EXCLUDED_ARCHS\[sdk=iphonesimulator\*\]\s*=\s*arm64\s*$/,
+      'EXCLUDED_ARCHS[sdk=iphonesimulator*] = i386'
+    )
+    File.write(xcconfig_path, contents)
   end
 
   # Workaround for Apple ITMS-91061 on old transitive SDK versions:

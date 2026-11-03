@@ -103,7 +103,9 @@ class ImportFromBEViewState extends State<ImportFromBEView> {
     _webViewController.loadRequest(Uri.parse(widget.config['initialUrl']));
   }
 
-  Future<String> _loadExtractJavaScript(String url) async {
+  Future<String> _loadConfiguredJavaScript(String url) async {
+    if (url.isEmpty) return '';
+
     if (Config.USE_LOCAL_IMPORT_CONFIG) {
       final uri = Uri.tryParse(url);
       final fileName =
@@ -118,6 +120,10 @@ class ImportFromBEViewState extends State<ImportFromBEView> {
 
     Response serverRsp = await Dio().get(url);
     return serverRsp.data.toString();
+  }
+
+  Future<String> _loadExtractJavaScript(String url) {
+    return _loadConfiguredJavaScript(url);
   }
 
   String _decodeJavaScriptStringResult(Object? result) {
@@ -143,127 +149,23 @@ class ImportFromBEViewState extends State<ImportFromBEView> {
   }
 
   Future<List<Map<String, dynamic>>> _loadManualImportTerms() async {
-    final result = await _webViewController.runJavaScriptReturningResult(r'''
-(function() {
-  var CONFIG = {
-    APP_BASE: 'https://ehall.seu.edu.cn/jwapp/sys/bykb',
-    CURRENT_TERM_API: '/modules/jshkcb/dqxnxq.do',
-    TERM_LIST_API: '/modules/jshkcb/xnxqcx.do',
-    SEMESTER_CALENDAR_API: '/modules/xskcb/cxxljc.do'
-  };
+    final manualTermScript =
+        widget.config['manualTermScript']?.toString() ?? '';
+    if (manualTermScript.isEmpty) return [];
 
-  function buildUrl(path) {
-    if (typeof WIS_EMAP_SERV !== 'undefined' && WIS_EMAP_SERV.getAbsPath) {
-      return WIS_EMAP_SERV.getAbsPath(path);
-    }
-    return CONFIG.APP_BASE + path;
-  }
-
-  function encodeParams(params) {
-    return Object.keys(params || {}).map(function(key) {
-      return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
-    }).join('&');
-  }
-
-  function syncRequest(path, params) {
-    var url = buildUrl(path);
-    if (typeof BH_UTILS !== 'undefined' && BH_UTILS.doSyncAjax) {
-      return BH_UTILS.doSyncAjax(url, params || {});
-    }
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', url, false);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-    xhr.setRequestHeader('Accept', 'application/json, text/javascript, */*; q=0.01');
-    xhr.send(encodeParams(params || {}));
-    if (xhr.status !== 200) throw new Error('HTTP Error: ' + xhr.status);
-    return JSON.parse(xhr.responseText);
-  }
-
-  function extractRows(data, tableName) {
-    return data && data.datas && data.datas[tableName] && data.datas[tableName].rows
-      ? data.datas[tableName].rows
-      : [];
-  }
-
-  function getJqxSelectedItem(selector) {
-    try {
-      if (typeof $ === 'undefined' || !$(selector).jqxDropDownList) return null;
-      return $(selector).jqxDropDownList('getSelectedItem');
-    } catch (error) {
-      return null;
-    }
-  }
-
-  function getSelectedTerm() {
-    var injected = window.__course_import_selected_term__;
-    if (injected && (injected.dm || injected.DM)) {
-      return { dm: injected.dm || injected.DM, name: injected.name || injected.MC || '' };
-    }
-
-    var termEl = document.querySelector('#dqxnxq2');
-    var selectedItem = getJqxSelectedItem('.dropdowm-xnxqList2') || getJqxSelectedItem('#dqxnxq2');
-    var dm = selectedItem && (selectedItem.value || (selectedItem.originalItem && selectedItem.originalItem.DM));
-    var name = selectedItem && (selectedItem.label || (selectedItem.originalItem && selectedItem.originalItem.MC));
-
-    if (!dm && termEl) dm = termEl.getAttribute('value') || termEl.value || '';
-    if (!name && termEl) name = termEl.textContent ? termEl.textContent.trim() : '';
-    if (dm || name) return { dm: dm || '', name: name || '' };
-
-    try {
-      var currentRows = extractRows(syncRequest(CONFIG.CURRENT_TERM_API, {}), 'dqxnxq');
-      if (currentRows.length > 0) return { dm: currentRows[0].DM || '', name: currentRows[0].MC || '' };
-    } catch (error) {}
-
-    return { dm: '', name: '' };
-  }
-
-  function parseTermCode(dm) {
-    var parts = String(dm || '').split('-');
-    if (parts.length < 3) return null;
-    return { xn: parts[0] + '-' + parts[1], xq: parts.slice(2).join('-') };
-  }
-
-  function getSemesterCalendar(dm) {
-    var parts = parseTermCode(dm);
-    if (!parts) return null;
-    var rows = extractRows(syncRequest(CONFIG.SEMESTER_CALENDAR_API, {
-      XN: parts.xn,
-      XQ: parts.xq
-    }), 'cxxljc');
-    return rows.length > 0 ? rows[0] : null;
-  }
-
-  var selected = getSelectedTerm();
-  var termRows = extractRows(syncRequest(CONFIG.TERM_LIST_API, { '*order': '-DM' }), 'xnxqcx');
-  var terms = termRows.map(function(row) {
-    var parts = parseTermCode(row.DM);
-    var calendar = null;
-    try { calendar = getSemesterCalendar(row.DM); } catch (error) {}
-
-    return {
-      dm: row.DM || '',
-      name: row.MC || '',
-      xn: parts ? parts.xn : row.XNDM || '',
-      xq: parts ? parts.xq : row.XQDM || '',
-      start: calendar && calendar.XQKSRQ ? String(calendar.XQKSRQ).slice(0, 10) : null,
-      weeks: calendar && calendar.ZZC != null ? calendar.ZZC : null,
-      teachingWeeks: calendar && calendar.ZJXZC != null ? calendar.ZJXZC : null,
-      selected: (selected.dm && selected.dm === row.DM) || (!selected.dm && selected.name && selected.name === row.MC)
-    };
-  }).filter(function(term) { return term.dm; });
-
-  return encodeURIComponent(JSON.stringify(terms));
-})()
-''');
+    final script = await _loadConfiguredJavaScript(manualTermScript);
+    if (script.isEmpty) return [];
+    final result =
+        await _webViewController.runJavaScriptReturningResult(script);
 
     final response = _decodeJavaScriptStringResult(result);
-    final terms = json.decode(response);
-    if (terms is! List) return [];
+    final decoded = json.decode(response);
+    if (decoded is! List) return [];
 
-    return terms
+    return decoded
         .whereType<Map>()
         .map((term) => Map<String, dynamic>.from(term))
+        .where((term) => (term['dm']?.toString() ?? '').isNotEmpty)
         .toList();
   }
 
@@ -368,11 +270,6 @@ class ImportFromBEViewState extends State<ImportFromBEView> {
     await _webViewController.runJavaScript('''
 (function(term) {
   window.__course_import_selected_term__ = term;
-  var termEl = document.querySelector('#dqxnxq2');
-  if (termEl) {
-    termEl.setAttribute('value', term.dm || term.DM || '');
-    if (term.name || term.MC) termEl.textContent = term.name || term.MC;
-  }
 })($payload);
 ''');
   }
@@ -413,10 +310,13 @@ class ImportFromBEViewState extends State<ImportFromBEView> {
   window.__course_import_manual_button_installed__ = true;
 
   function getSelectedTermText() {
-    var termEl = document.querySelector('#dqxnxq2');
-    var termText = termEl && termEl.textContent ? termEl.textContent.trim() : '';
+    var injectedTerm = window.__course_import_selected_term__;
+    var termText = injectedTerm && (injectedTerm.name || injectedTerm.MC)
+      ? (injectedTerm.name || injectedTerm.MC).toString().trim()
+      : '';
     if (!termText) {
-      var selected = document.querySelector('.jqx-listitem-state-selected');
+      var selected = document.querySelector('[aria-selected="true"]') ||
+        document.querySelector('.jqx-listitem-state-selected');
       termText = selected && selected.textContent ? selected.textContent.trim() : '';
     }
     return termText || '当前页面学期';

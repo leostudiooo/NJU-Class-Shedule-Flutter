@@ -92,6 +92,7 @@
       "delayTime": 3,
       "manualImport": true,
       "manualTermSelection": true,
+      "manualTermScript": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/seubksjw_terms.js",
       "extractJS": "",
       "extractJSfileAndroid": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/seubksjw.js",
       "extractJSfileiOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/seubksjw.js",

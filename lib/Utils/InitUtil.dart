@@ -1,15 +1,18 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
-import 'package:umeng_common_sdk/umeng_common_sdk.dart';
+import 'Analytics.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:in_app_review/in_app_review.dart';
 import '../Models/CourseTableModel.dart';
+import '../Models/CourseModel.dart' show CourseProvider;
 import '../Resources/Config.dart';
 import '../Resources/Url.dart';
 import '../Utils/ColorUtil.dart';
 import '../Utils/WeekUtil.dart';
 import '../core/widget_data/services/unified_data_service.dart';
+import '../core/widget_data/utils/widget_refresh_helper.dart';
 
 class InitUtil {
   static Future<List> initialize() async {
@@ -17,7 +20,9 @@ class InitUtil {
     int themeModeIndex = await getThemeMode();
     String themeCustom = await getThemeCustom();
     await checkDataBase();
-    await WeekUtil.checkWeek();
+    await CourseProvider().repairMissingCourseIds();
+    // Browsing another week lasts for this session, not the next cold start.
+    await WeekUtil.checkWeek(resetDisplayedWeek: true);
     await ColorPool.checkColorPool();
 
     // 初始化 Widget 数据
@@ -30,8 +35,8 @@ class InitUtil {
   /// 初始化 Widget 数据
   static Future<void> initializeWidgetData() async {
     try {
-      // 仅在 iOS 平台执行
-      if (!Platform.isIOS) return;
+      // 仅在具备原生小组件实现的平台执行（iOS / Android）
+      if (!WidgetRefreshHelper.isSupportedPlatform) return;
 
       final preferences = await SharedPreferences.getInstance();
       final widgetService = UnifiedDataService(preferences: preferences);
@@ -39,12 +44,12 @@ class InitUtil {
       // 更新 Widget 数据
       final success = await widgetService.updateWidgetData();
       if (success) {
-        print('Widget data initialized successfully');
+        debugPrint('Widget data initialized successfully');
       } else {
-        print('Failed to initialize widget data');
+        debugPrint('Failed to initialize widget data');
       }
     } catch (e) {
-      print('Error initializing widget data: $e');
+      debugPrint('Error initializing widget data: $e');
     }
   }
 
@@ -75,57 +80,74 @@ class InitUtil {
     return '';
   }
 
-  static checkDataBase() async {
-    CourseTableProvider courseTableProvider = CourseTableProvider();
-    List c = await courseTableProvider.getAllCourseTable();
-    if (c.isEmpty) {
-      courseTableProvider.insert(CourseTable(Config.default_class_table));
+  static Future<void> checkDataBase({CourseTableProvider? provider}) async {
+    final courseTableProvider = provider ?? CourseTableProvider();
+    final tables = await courseTableProvider.getAllCourseTable();
+    if (tables.isEmpty) {
+      final table = await courseTableProvider.insert(
+        CourseTable(Config.default_class_table),
+      );
+      tables.add(table.toMap());
+    }
+
+    // A fresh installation (or an older installation with tableId = 0) must
+    // select a real table before export and widget initialization read it.
+    final preferences = await SharedPreferences.getInstance();
+    final selectedId = preferences.getInt('tableId');
+    if (!tables.any((table) => table[columnId] == selectedId)) {
+      await preferences.setInt('tableId', tables.first[columnId] as int);
     }
   }
 
-  static showReview() async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    int openTimes = sp.getInt("openTimes") ?? 0;
-    await sp.setInt("openTimes", openTimes + 1);
+  static Future<void> showReview({
+    Future<dynamic> Function()? loadConfig,
+    bool? isIOS,
+  }) async {
+    try {
+      final sp = await SharedPreferences.getInstance();
+      final openTimes = sp.getInt('openTimes') ?? 0;
+      await sp.setInt('openTimes', openTimes + 1);
+      if (!(isIOS ?? Platform.isIOS) ||
+          (sp.getBool('hasShowReview') ?? false)) {
+        return;
+      }
 
-    if (!Platform.isIOS) return;
+      final dynamic data;
+      if (loadConfig != null) {
+        data = await loadConfig();
+      } else {
+        final response = await Dio(
+          BaseOptions(
+            connectTimeout: const Duration(seconds: 5),
+            receiveTimeout: const Duration(seconds: 5),
+          ),
+        ).get('${Url.UPDATE_ROOT}/showiOSReview.json');
+        data = response.data;
+      }
+      if (data is! Map || data['showReview'] != true) return;
+      final threshold =
+          data['reviewTime'] is int
+              ? data['reviewTime'] as int
+              : Config.REVIEW_DIALOG_SHOW_TIME;
+      if (openTimes < threshold) return;
+      final review = InAppReview.instance;
+      if (!await review.isAvailable()) return;
 
-    Dio dio = Dio();
-    String url = Url.UPDATE_ROOT + '/showiOSReview.json';
-    Response response = await dio.get(url);
-    if (response.statusCode != HttpStatus.ok) return;
-
-    // print(response.data['showReview']);
-    // print(response.data['reviewTime']);
-
-    bool showReview = response.data['showReview'] ?? false;
-    if (!showReview) return;
-
-    int reviewTime =
-        response.data['reviewTime'] ?? Config.REVIEW_DIALOG_SHOW_TIME;
-    bool needsShowReview = (openTimes >= reviewTime);
-    if (!needsShowReview) return;
-
-    final InAppReview inAppReview = InAppReview.instance;
-    bool hasShowReview = sp.getBool("hasShowReview") ?? false;
-    int delaySeconds = Config.REVIEW_DIALOG_DELAY_SECONDS;
-
-    // for test
-    // print(openTimes);
-    // print(reviewTime);
-    // print(hasShowReview);
-    // hasShowReview = false;
-    // delaySeconds = 1;
-
-    if (hasShowReview) return;
-
-    bool inAppReviewAvailable = await inAppReview.isAvailable();
-    if (!inAppReviewAvailable) return;
-
-    Timer(Duration(seconds: delaySeconds), () {
-      UmengCommonSdk.onEvent("review_dialog", {"action": "show"});
-      inAppReview.requestReview();
-      sp.setBool("hasShowReview", true);
-    });
+      Timer(
+        const Duration(seconds: Config.REVIEW_DIALOG_DELAY_SECONDS),
+        () async {
+          try {
+            Analytics.onEvent('review_dialog', {'action': 'show'});
+            await review.requestReview();
+            await sp.setBool('hasShowReview', true);
+          } catch (error) {
+            debugPrint('Review prompt skipped: $error');
+          }
+        },
+      );
+    } catch (error) {
+      // A rating prompt must never fail the application startup isolate.
+      debugPrint('Review configuration unavailable: $error');
+    }
   }
 }

@@ -2,8 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter_swiper_null_safety_flutter3/flutter_swiper_null_safety_flutter3.dart';
-import 'package:umeng_common_sdk/umeng_common_sdk.dart';
+import '../../Utils/Analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:scoped_model/scoped_model.dart';
@@ -12,6 +11,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../Models/CourseTableModel.dart';
 import '../../generated/l10n.dart';
 import '../../Models/CourseModel.dart';
+import '../../Models/CourseGroup.dart';
 import '../../Models/ScheduleModel.dart';
 import '../../Resources/Config.dart';
 import '../../Resources/Url.dart';
@@ -23,6 +23,8 @@ import '../../Components/Toast.dart';
 import '../../Components/TransBgTextButton.dart';
 
 import 'Widgets/CourseDetailDialog.dart';
+import '../EditCourse/EditCourseView.dart';
+import '../../Resources/Constant.dart';
 import 'Widgets/HideFreeCourseDialog.dart';
 import 'Widgets/CourseDeleteDialog.dart';
 import 'Widgets/CourseWidget.dart';
@@ -76,7 +78,7 @@ class CourseTablePresenter {
                   height,
                   width,
                   false,
-                  false,
+                  1,
                   () => showClassDialog(context, filteredHideCourses[i], false),
                   () => showDeleteDialog(
                     context,
@@ -91,7 +93,7 @@ class CourseTablePresenter {
                   height,
                   width,
                   true,
-                  false,
+                  1,
                   () => showClassDialog(context, activeCourses[i], true),
                   () => showDeleteDialog(context, activeCourses[i]),
                 )) +
@@ -103,7 +105,7 @@ class CourseTablePresenter {
                 height,
                 width,
                 isThisWeek(filteredMultiCourses[i][0], nowWeek),
-                true,
+                CourseGroup.collect(filteredMultiCourses[i]).length,
                 () => showMultiClassDialog(context,
                     multiCourses.indexOf(filteredMultiCourses[i]), nowWeek),
                 () => showDeleteDialog(context, filteredMultiCourses[i][0])));
@@ -164,7 +166,7 @@ class CourseTablePresenter {
 
   void showDonateDialog(
       BuildContext context, String welcomeTitle, String welcomeContent) async {
-    UmengCommonSdk.onEvent("import_dialog", {"action": "show"});
+    Analytics.onEvent("import_dialog", {"action": "show"});
     showDialog(
         context: context,
         barrierDismissible: false,
@@ -184,7 +186,7 @@ class CourseTablePresenter {
                                     : Colors.white,
                             child: Text(S.of(context).love_and_donate),
                             onPressed: () async {
-                              UmengCommonSdk.onEvent(
+                              Analytics.onEvent(
                                   "import_dialog", {"action": "donate"});
                               if (Platform.isIOS) {
                                 _launchURL(Url.URL_APPLE);
@@ -204,7 +206,7 @@ class CourseTablePresenter {
                                     : Colors.white,
                             child: Text(S.of(context).bug_and_report),
                             onPressed: () {
-                              UmengCommonSdk.onEvent(
+                              Analytics.onEvent(
                                   "import_dialog", {"action": "bug"});
                               if (Platform.isIOS) {
                                 _launchURL(Url.QQ_GROUP_APPLE_URL);
@@ -222,7 +224,7 @@ class CourseTablePresenter {
                             child: Text(S.of(context).love_but_no_money,
                                 style: const TextStyle(color: Colors.grey)),
                             onPressed: () async {
-                              UmengCommonSdk.onEvent(
+                              Analytics.onEvent(
                                   "import_dialog", {"action": "noMoney"});
                               Navigator.of(context).pop();
                             })),
@@ -258,69 +260,100 @@ class CourseTablePresenter {
     return true;
   }
 
-  showClassDialog(BuildContext context, Course course, bool isActive) {
-    return showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          UmengCommonSdk.onEvent("class_click", {"type": "single"});
-          return CourseDetailDialog(course, isActive, () {
-            Navigator.of(context).pop();
-          });
-        });
+  Future<void> _showCourseDetails(
+    BuildContext context,
+    List<Course> courses,
+    bool Function(Course) isActive,
+  ) async {
+    if (courses.isEmpty) return;
+    final all = courses.first.tableId == null
+        ? courses
+        : (await courseProvider.getAllCourses(courses.first.tableId!))
+              .map((row) => Course.fromMap(Map<String, dynamic>.from(row)))
+              .toList();
+    final groups = CourseGroup.collect(courses).map((clicked) {
+      final first = clicked.first;
+      return [
+        first,
+        ...all.where(
+          (c) => c.id != first.id && CourseGroup.sameCourse(first, c),
+        ),
+      ];
+    }).toList();
+    final representatives = groups.map((g) => g.first).toList();
+    final times = courses.first.tableId == null
+        ? Constant.CLASS_TIME_LIST
+        : await CourseTableProvider().getClassTimeList(courses.first.tableId!);
+    if (!context.mounted) return;
+    final selected = await showDialog<Course>(
+      context: context,
+      barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.45),
+      builder: (dialogContext) {
+        void close() => Navigator.of(dialogContext).pop();
+        void edit(Course course) => Navigator.of(dialogContext).pop(course);
+        if (representatives.length == 1) {
+          return CourseDetailDialog(
+            representatives.first,
+            groups.first.any(isActive),
+            close,
+            meetings: groups.first,
+            classTimeList: times,
+            onEdit: () => edit(representatives.first),
+          );
+        }
+        return CourseDetailsDialog(
+          courses: representatives,
+          groups: groups,
+          isActive: (course) =>
+              groups.firstWhere((g) => g.first.id == course.id).any(isActive),
+          classTimeList: times,
+          onClose: close,
+          onEdit: edit,
+        );
+      },
+    );
+    if (selected == null || !context.mounted) return;
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => EditCourseView(
+          course: selected,
+          classTimeList: times,
+          meetings: groups.firstWhere((g) => g.first.id == selected.id),
+        ),
+      ),
+    );
+    if (saved == true && context.mounted) MainStateModel.of(context).refresh();
   }
 
-  showMultiClassDialog(BuildContext context, int i, int nowWeek) {
-    return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          // 设计失误，其实应该把是不是当前周传进来的
-          UmengCommonSdk.onEvent("class_click", {"type": "multi"});
-          return Swiper(
-            itemBuilder: (BuildContext context, int index) {
-              return CourseDetailDialog(
-                  multiCourses[i][index],
-                  isThisWeek(multiCourses[i][index], nowWeek),
-                  () => Navigator.of(context).pop());
-            },
-            itemCount: multiCourses[i].length,
-            pagination: SwiperPagination(
-                margin: const EdgeInsets.only(bottom: 100),
-                builder: DotSwiperPaginationBuilder(
-                    color: Colors.grey,
-                    activeColor: Theme.of(context).primaryColor)),
-            viewportFraction: 1,
-            scale: 1,
-          );
-        });
+  Future<void> showClassDialog(
+    BuildContext context,
+    Course course,
+    bool isActive,
+  ) {
+    Analytics.onEvent('class_click', {'type': 'single'});
+    return _showCourseDetails(context, [course], (_) => isActive);
   }
 
-  showFreeClassDialog(BuildContext context, int nowWeek) {
-    return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          UmengCommonSdk.onEvent("class_click", {"type": "free"});
-          return Swiper(
-            itemBuilder: (BuildContext context, int index) {
-              return CourseDetailDialog(
-                  freeCourses[index],
-                  isThisWeek(freeCourses[index], nowWeek),
-                  () => Navigator.of(context).pop());
-            },
-            itemCount: freeCourses.length,
-            pagination: SwiperPagination(
-                margin: const EdgeInsets.only(bottom: 100),
-                builder: DotSwiperPaginationBuilder(
-                    color: Colors.grey,
-                    activeColor: Theme.of(context).primaryColor)),
-            loop: freeCourses.length > 1,
-            viewportFraction: 1,
-            scale: 1,
-          );
-        });
+  Future<void> showMultiClassDialog(BuildContext context, int i, int nowWeek) {
+    Analytics.onEvent('class_click', {'type': 'multi'});
+    return _showCourseDetails(
+      context,
+      List.of(multiCourses[i]),
+      (course) => isThisWeek(course, nowWeek),
+    );
+  }
+
+  Future<void> showFreeClassDialog(BuildContext context, int nowWeek) {
+    Analytics.onEvent('class_click', {'type': 'free'});
+    return _showCourseDetails(
+      context,
+      List.of(freeCourses),
+      (course) => isThisWeek(course, nowWeek),
+    );
   }
 
   showDeleteDialog(BuildContext context, Course course) {
-    UmengCommonSdk.onEvent("class_delete", {"action": "show"});
+    Analytics.onEvent("class_delete", {"action": "show"});
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) {

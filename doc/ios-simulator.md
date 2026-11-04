@@ -3,10 +3,9 @@
 初始化环境并构建：
 
 ```bash
+bash tool/ci/bootstrap.sh
 source tool/setup_ohos_env.sh
-export PATH="$PWD/.fvm/flutter_sdk/bin:$PATH"
-export PUB_CACHE="$PWD/.fvm/.pub_cache"
-flutter build ios --simulator --debug --no-codesign --no-pub
+.fvm/flutter_sdk/bin/flutter build ios --simulator --debug --no-codesign --no-pub
 file build/ios/iphonesimulator/Runner.app/Runner
 ```
 
@@ -16,9 +15,9 @@ file build/ios/iphonesimulator/Runner.app/Runner
 Mach-O 64-bit executable arm64
 ```
 
-Xcode Build Phase 会自动执行 `ios/MLKitAppleSiliconSimulator/patch_arm64_simulator.py`，修复旧版 ML Kit 静态库的 arm64 Simulator platform 标记；不需要手动运行该脚本。
+Apple Silicon 模拟器的 arm64 切片由依赖版本保证：`UMCommon` / `UMDevice` 固定在带 ARM64 模拟器切片的官方 XCFramework 版本，扫码使用 `third_party/mobile_scanner` 中的源码版本（iOS 走苹果 Vision）。不再需要对预编译 ML Kit 静态库做 arm64 标记修补。
 
-当前 Pod/Xcode 配置要求 iOS 15.0，并保留 Apple Silicon Simulator 的 arm64 架构。修改 `ios/Podfile` 或清理 `ios/Pods` 后，重新执行：
+当前 Pod/Xcode 配置要求 iOS 15.0，真机与模拟器部署下限一致，支持 Xcode 27 构建。修改 `ios/Podfile` 或清理 `ios/Pods` 后，重新执行：
 
 ```bash
 pod install

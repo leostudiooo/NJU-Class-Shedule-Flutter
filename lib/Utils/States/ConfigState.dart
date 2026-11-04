@@ -1,4 +1,5 @@
 import 'package:scoped_model/scoped_model.dart';
+import '../BackgroundService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 mixin ConfigStateModel on Model {
@@ -11,7 +12,6 @@ mixin ConfigStateModel on Model {
   bool _forceZoom = false;
   bool _addButton = false;
   bool _whiteMode = false;
-  String? _bgImgPath = "";
   int _lastCheckUpdateTime = 0;
   int _coolDownTime = 600;
   bool _showNonCurrentWeekCourses = true;
@@ -161,11 +161,10 @@ mixin ConfigStateModel on Model {
     return _addButton;
   }
 
-  void setWhiteMode(bool whiteMode) async {
+  Future<void> setWhiteMode(bool whiteMode) async {
+    await BackgroundService.instance.setWhiteMode(whiteMode);
     _whiteMode = whiteMode;
     notifyListeners();
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.setBool("whiteMode", _whiteMode);
   }
 
   Future<bool> getWhiteMode() async {
@@ -179,26 +178,18 @@ mixin ConfigStateModel on Model {
   }
 
   Future<bool> setBgImgPath(String bgImgPath) async {
-    _bgImgPath = bgImgPath;
+    final sp = await SharedPreferences.getInstance();
+    await sp.remove('backgroundImages');
+    await sp.setString('bgImgPath', bgImgPath);
+    await BackgroundService.instance.ensureCurrent();
     notifyListeners();
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    sp.setString("bgImgPath", _bgImgPath!);
     return true;
   }
 
-  Future<String> getBgImgPath() async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    String? bgImgPath = sp.getString("bgImgPath");
-    if (bgImgPath != null) {
-      // _bgImgPath = bgImgPath;
-      return bgImgPath;
-    }
-    return _bgImgPath!;
-  }
+  Future<String> getBgImgPath() => BackgroundService.instance.ensureCurrent();
 
   Future<bool> removeBgImgPath() async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    await sp.remove("bgImgPath");
+    await BackgroundService.instance.clear();
     notifyListeners();
     return true;
   }

@@ -4,6 +4,6 @@
 Use this index to find stable project documentation before changing architecture, build tooling, or feature workflows.
 
 - [文档规范](documentation-standard.md) — 本文档定义了在 `/doc` 目录下编写稳定、可复用、面向开发者和 coding agent 的项目文档的规范。
-- [Flutter 与 FVM 工作流](flutter-fvm.md) — 项目通过 FVM 使用自定义 OHOS Flutter SDK。该版本不是官方 Flutter 版本，因此 FVM 执行命令前会要求确认。
+- [Flutter SDK 工作流](flutter-fvm.md) — 项目不使用全局 FVM 版本。Flutter SDK 由 `tool/ci/bootstrap.sh` 按 `.fvmrc` 固定的版本 checkout 到仓库内 `.fvm/flutter_sdk`，同时把 `external/` 下的本地依赖拉到指定 commit，并把 `PUB_CACHE` 限制在仓库内。
 - [iOS Apple Silicon Simulator 构建](ios-simulator.md) — 初始化环境并构建：
 - [本地学校导入测试](local-school-import.md) — 导入页通过 `Config.USE_LOCAL_IMPORT_CONFIG` 决定配置来源：默认读取线上配置；设置 `--dart-define=USE_LOCAL_IMPORT_CONFIG=true` 后，读取打包资源 `api/schoolList.json`。导入解析脚本和手动学期脚本均按配置加载：本地模式取 `extractJSfile*` 或 `manualTermScript` URL 的最后一个路径段，从 `api/tools/<文件名>.js` 读取；线上模式则请求配置中的完整 URL。启用 `manualTermSelection` 的学校可配置 `manualTermScript`，脚本应返回经过 `encodeURIComponent` 的标准学期数组，至少包含 `dm`、`name`、`start` 和 `selected` 字段。学校专用接口及原始响应结构留在对应学校脚本中。

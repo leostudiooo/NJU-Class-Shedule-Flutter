@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "title": "南京大学本科生教务系统（beta）",
+      "title": "南京大学本科生教务系统",
       "pinyin": "1nanjingdaxuebenkejiaowu",
       "description": "通过教务系统我的课表进行导入",
       "page_title": "教务系统登录",
@@ -16,7 +16,7 @@
       "extractJSfileOHOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/njubksjw2.js",
       "banner_content": "注意：如加载失败，请连接南京大学VPN\n试试浏览器访问教务网，没准系统又抽风了\n听起来有点离谱，不过在南京大学，倒也正常",
       "banner_action": "下载南京大学VPN",
-      "banner_url": "https://vpn.nju.edu.cn",
+      "banner_url": "https://ztna.nju.edu.cn",
       "isGrey": true,
       "isGrey3.1.0": false
     },
@@ -36,12 +36,12 @@
       "extractJSfileOHOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/njubksxk.js",
       "banner_content": "注意：如加载失败，请连接南京大学VPN\n试试浏览器访问教务网，没准系统又抽风了\n听起来有点离谱，不过在南京大学，倒也正常",
       "banner_action": "下载南京大学VPN",
-      "banner_url": "https://vpn.nju.edu.cn",
+      "banner_url": "https://ztna.nju.edu.cn",
       "isGrey": true,
       "isGrey3.1.0": false
     },
     {
-      "title": "南京大学研究生教务系统（test）",
+      "title": "南京大学研究生教务系统",
       "pinyin": "1nanjingdaxueyanjiujiaowu",
       "description": "研究生怎么还有单独的界面啊",
       "page_title": "教务系统登录",
@@ -56,7 +56,7 @@
       "extractJSfileOHOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/njuyjsjw.js",
       "banner_content": "注意：如加载失败，请连接南京大学VPN\n试试浏览器访问教务网，没准系统又抽风了\n听起来有点离谱，不过在南京大学，倒也正常",
       "banner_action": "下载南京大学VPN",
-      "banner_url": "https://vpn.nju.edu.cn",
+      "banner_url": "https://ztna.nju.edu.cn",
       "isGrey": true,
       "isGrey3.1.0": false
     },
@@ -76,12 +76,92 @@
       "extractJSfileOHOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/njuyjsxk.js",
       "banner_content": "导入方式：登陆后点击「我的选课」进入选课页\n注意：如加载失败，请连接南京大学VPN\n试试浏览器访问教务网，没准教务系统又抽风了\n听起来有点离谱，不过在南京大学，倒也正常",
       "banner_action": "下载南京大学VPN",
-      "banner_url": "https://vpn.nju.edu.cn",
+      "banner_url": "https://ztna.nju.edu.cn",
       "isGrey": true,
       "isGrey3.1.0": false
     },
     {
-      "title": "东南大学本研课表 (beta)",
+      "title": "北京航空航天大学本科生教务系统",
+      "pinyin": "beijinghangkonghangtiandaxuebenkejiaowu",
+      "description": "但北京也不让航空航天啊",
+      "page_title": "北航教务登录",
+      "initialUrl": "https://byxt-443.e1.buaa.edu.cn/",
+      "redirectUrl": "",
+      "targetUrl": "https://byxt-443.e1.buaa.edu.cn/jwapp/sys/homeapp/home/index.html",
+      "preExtractJS": "window.__NJU_SCHEDULE_IMPORT_CONFIG__={\"semester_start_monday\":\"2026-09-07\"};",
+      "delayTime": 3,
+      "extractJS": "",
+      "extractJSfileAndroid": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/buaabksjw.js",
+      "extractJSfileiOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/buaabksjw.js",
+      "extractJSfileOHOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/buaabksjw.js",
+      "banner_content": "导入方式：使用北航统一认证登录后，自动导入当前学期已排课课程（含实验课）。\n未排课课程请在教务系统查询后手动添加。访问异常可先打开学校官方VPN。",
+      "banner_action": "北航官方VPN入口",
+      "banner_url": "https://e.buaa.edu.cn/",
+      "class_time_list": [
+        {
+          "start": "08:00",
+          "end": "08:45"
+        },
+        {
+          "start": "08:50",
+          "end": "09:35"
+        },
+        {
+          "start": "09:50",
+          "end": "10:35"
+        },
+        {
+          "start": "10:40",
+          "end": "11:25"
+        },
+        {
+          "start": "11:30",
+          "end": "12:15"
+        },
+        {
+          "start": "14:00",
+          "end": "14:45"
+        },
+        {
+          "start": "14:50",
+          "end": "15:35"
+        },
+        {
+          "start": "15:50",
+          "end": "16:35"
+        },
+        {
+          "start": "16:40",
+          "end": "17:25"
+        },
+        {
+          "start": "17:30",
+          "end": "18:15"
+        },
+        {
+          "start": "19:00",
+          "end": "19:45"
+        },
+        {
+          "start": "19:50",
+          "end": "20:35"
+        },
+        {
+          "start": "20:40",
+          "end": "21:25"
+        },
+        {
+          "start": "21:30",
+          "end": "22:15"
+        }
+      ],
+      "semester_start_monday": "2026-09-07",
+      "week_count": 19,
+      "isGrey": true,
+      "isGrey3.1.0": false
+    },
+    {
+      "title": "东南大学本研课表",
       "pinyin": "dongnandaxue",
       "description": "南哪课表嘛，东南也算南哪（大误",
       "page_title": "本研课表",
@@ -154,7 +234,7 @@
           "end": "21:25"
         }
       ],
-      "semester_start_monday": "2026-08-24",
+      "semester_start_monday": "2026-09-21",
       "isGrey": true,
       "isGrey3.1.0": false
     },
@@ -237,7 +317,7 @@
           "end": "22:00"
         }
       ],
-      "semester_start_monday": "2025-09-15",
+      "semester_start_monday": "2026-09-14",
       "isGrey": true,
       "isGrey3.1.0": false
     },
@@ -304,7 +384,7 @@
           "end": "21:55"
         }
       ],
-      "semester_start_monday": "2026-03-02",
+      "semester_start_monday": "2026-09-07",
       "isGrey": true,
       "isGrey3.1.0": false
     },
@@ -387,7 +467,7 @@
           "end": "22:00"
         }
       ],
-      "semester_start_monday": "2025-09-08",
+      "semester_start_monday": "2026-09-07",
       "isGrey": true,
       "isGrey3.1.0": false
     },
@@ -396,11 +476,11 @@
       "pinyin": "qinghuadaxueyanjiusheng",
       "description": "北伐！北伐！",
       "page_title": "信息门户登录",
-      "initialUrl": "https://webvpn.tsinghua.edu.cn/https/77726476706e69737468656265737421fcf2408e297e7c4377068ea48d546d30ca8cc97bcc/f/wlxt/index/course/student/index",
-      "redirectUrl": "https://learn.tsinghua.edu.cn/f/wlxt/index/course/student/",
-      "targetUrl": "https://webvpn.tsinghua.edu.cn/http/77726476706e69737468656265737421eaff4b8b69336153301c9aa596522b20bc86e6e559a9b290/jxmh_out.do?m=yjs_jxrl_all",
-      "preExtractJS": "",
-      "delayTime": 3,
+      "initialUrl": "https://webvpn.tsinghua.edu.cn/https/77726476706e69737468656265737421f9f9479369247b59700f81b9991b2631506205de/f/info/gxfw_fg/common/index",
+      "redirectUrl": "",
+      "targetUrl": "https://webvpn.tsinghua.edu.cn/https/77726476706e69737468656265737421f9f9479369247b59700f81b9991b2631506205de/f/info_mobile/",
+      "preExtractJS": "window.__NJU_SCHEDULE_IMPORT_CONFIG__={\"semester_start_monday\":\"2026-09-14\",\"week_count\":16};document.documentElement.innerHTML=\"<head><meta name=\\\"viewport\\\" content=\\\"width=device-width,initial-scale=1\\\"><title>清华课表导入</title></head><body style=\\\"font:18px sans-serif;padding:24px\\\">正在读取清华研究生课表，请稍候…</body>\";history.replaceState(null,\"\",\"/nju-schedule-import\");window.location.replace(\"https://webvpn.tsinghua.edu.cn/https/77726476706e69737468656265737421f9f9479369247b59700f81b9991b2631506205de/f/info/gxfw_fg/common/cardRoaming/JXRL_YJS#nju-schedule=2026-09-14,16\");",
+      "delayTime": 8,
       "extractJS": "",
       "extractJSfileAndroid": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/thuyjsjw.js",
       "extractJSfileiOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/thuyjsjw.js",
@@ -466,7 +546,154 @@
           "end": "21:45"
         }
       ],
-      "semester_start_monday": "2026-02-23",
+      "semester_start_monday": "2026-09-14",
+      "isGrey": true,
+      "isGrey3.1.0": false,
+      "week_count": 16
+    },
+    {
+      "title": "中国科学院大学研究生课表",
+      "pinyin": "zhongguokexueyuandaxueyanjiushengkebiao",
+      "description": "南哪课表远征果壳！中科院也得排好课表",
+      "page_title": "国科大研究生课表",
+      "initialUrl": "https://sep.ucas.ac.cn/d_index/Z2tkenhfbG9jYWw=/",
+      "redirectUrl": "http://mooc.ucas.edu.cn/portal",
+      "targetUrl": "https://kb.mooc.ucas.edu.cn/res/pc/curriculum/schedule.html",
+      "preExtractJS": "",
+      "delayTime": 3,
+      "extractJS": "",
+      "extractJSfileAndroid": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/ucasyjsxk.js",
+      "extractJSfileiOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/ucasyjsxk.js",
+      "extractJSfileOHOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/ucasyjsxk.js",
+      "banner_content": "导入方式：登录 SEP 后将自动跳转国科大在线个人课表\n登录后请耐心等待，脚本会自动读取本学期所有周次的课程\n仅研究生账号实测通过，本科生路径未验证",
+      "banner_action": "朕知道了",
+      "banner_url": "",
+      "class_time_list": [
+        {
+          "start": "08:30",
+          "end": "09:15"
+        },
+        {
+          "start": "09:20",
+          "end": "10:05"
+        },
+        {
+          "start": "10:25",
+          "end": "11:10"
+        },
+        {
+          "start": "11:15",
+          "end": "12:00"
+        },
+        {
+          "start": "13:30",
+          "end": "14:15"
+        },
+        {
+          "start": "14:20",
+          "end": "15:05"
+        },
+        {
+          "start": "15:25",
+          "end": "16:10"
+        },
+        {
+          "start": "16:15",
+          "end": "17:00"
+        },
+        {
+          "start": "17:05",
+          "end": "17:50"
+        },
+        {
+          "start": "18:30",
+          "end": "19:15"
+        },
+        {
+          "start": "19:20",
+          "end": "20:05"
+        },
+        {
+          "start": "20:15",
+          "end": "21:00"
+        },
+        {
+          "start": "21:05",
+          "end": "21:50"
+        }
+      ],
+      "semester_start_monday": "2026-08-31",
+      "isGrey": true,
+      "isGrey3.1.0": false
+    },
+    {
+      "title": "南京师范大学本科生教务系统",
+      "pinyin": "nanjingshifandaxuebenkejiaowu",
+      "description": "南师大怎么不是南大呢",
+      "page_title": "南京师范大学课表",
+      "initialUrl": "https://ehallapp.nnu.edu.cn/jwapp/sys/syxkjg/*default/index.do",
+      "redirectUrl": "",
+      "targetUrl": "https://ehallapp.nnu.edu.cn/jwapp/sys/syxkjg/*default/index.do#/wdkb",
+      "preExtractJS": "",
+      "delayTime": 3,
+      "extractJS": "",
+      "extractJSfileAndroid": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/nnubksjw.js",
+      "extractJSfileiOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/nnubksjw.js",
+      "extractJSfileOHOS": "https://cdn.idealclover.cn/Projects/wheretosleepinnju/production/tools/nnubksjw.js",
+      "banner_content": "导入方式：登录后进入我的课表查看页面。\n若页面无法打开，请关闭代理或将 nnu.edu.cn 设置为直连。",
+      "banner_action": "使用南京师范大学vpn",
+      "banner_url": "",
+      "class_time_list": [
+        {
+          "start": "08:00",
+          "end": "08:40"
+        },
+        {
+          "start": "08:45",
+          "end": "09:25"
+        },
+        {
+          "start": "09:40",
+          "end": "10:20"
+        },
+        {
+          "start": "10:35",
+          "end": "11:15"
+        },
+        {
+          "start": "11:20",
+          "end": "12:00"
+        },
+        {
+          "start": "13:30",
+          "end": "14:10"
+        },
+        {
+          "start": "14:15",
+          "end": "14:55"
+        },
+        {
+          "start": "15:10",
+          "end": "15:50"
+        },
+        {
+          "start": "15:55",
+          "end": "16:35"
+        },
+        {
+          "start": "18:30",
+          "end": "19:10"
+        },
+        {
+          "start": "19:20",
+          "end": "20:00"
+        },
+        {
+          "start": "20:10",
+          "end": "20:50"
+        }
+      ],
+      "semester_start_monday": "2026-08-31",
       "isGrey": true,
       "isGrey3.1.0": false
     }

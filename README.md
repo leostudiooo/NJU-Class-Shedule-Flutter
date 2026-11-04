@@ -35,12 +35,6 @@
 
 ## 如何支持更多学校
 
-开发说明和维护约定见 [`doc/index.md`](doc/index.md)。该索引由 Git hook 在提交前自动生成。首次使用仓库时执行：
-
-```bash
-sh tool/install_git_hooks.sh
-```
-
 南哪课表解析课程的主要原理是通过打开页面，并通过 JS 脚本获取页面中的课程信息，然后解析出课程的时间、地点、教师等信息。
 
 涉及到的主要文件：
@@ -78,47 +72,40 @@ sh tool/install_git_hooks.sh
 
 ```
 
-### 使用本地配置和解析脚本测试导入
-
-开发或调试学校导入时，可以让 App 读取仓库中的本地配置和 JavaScript 解析脚本，而不是读取线上 `schoolList.json` 和 CDN 脚本。实现方式是通过 Dart define 打开 `USE_LOCAL_IMPORT_CONFIG`：
-
-1. 在 `api/schoolList.json` 中添加或修改学校配置。
-2. 将解析脚本放到 `api/tools/<文件名>.js`。这些目录已经作为 Flutter assets 打包。
-3. 在配置的 `extractJSfileAndroid`、`extractJSfileiOS`、`extractJSfileOHOS` 中填写包含相同文件名的 URL，例如 `http://127.0.0.1/njubksxk.js`。本地模式只取 URL 的最后一段文件名，并从 `api/tools/` 加载对应脚本；不要求本地启动 HTTP 服务。
-4. 运行本地配置：
-
-   ```bash
-   yes | fvm flutter run --dart-define=USE_LOCAL_IMPORT_CONFIG=true
-   ```
-
-   如果依赖已经解析完成，也可以加 `--no-pub`，避免测试时改写 `pubspec.lock`。
-
-本地模式仍会在 WebView 中访问学校教务系统，因此需要网络、登录凭据和对应的 VPN/校园网条件。测试完成后，确认没有把仅用于调试的配置或脚本 URL 留在正式配置中。
-
 ## 部署相关
 
-因为增加了鸿蒙支持，需要使用鸿蒙 Flutter 版本。
+三端使用 `.fvmrc` 固定的 Flutter `3.35.8-ohos-1.0.4`（Dart 3.9.2）。扫码依赖使用 `third_party/mobile_scanner` 中带鸿蒙适配的 7.1.4 源码，并延后 Android 方向传感器访问至实际扫码；来源与补丁见该目录的 `NJU_PATCHES.md`。iOS 使用苹果 Vision，可在 Apple 芯片模拟器原生构建。
 
-1. 根据 [flutter_flutter oh-3.27.0](https://gitcode.com/openharmony-tpc/flutter_flutter/tree/oh-3.27.0-release) 配置鸿蒙依赖
+同时使用带鸿蒙适配的 WebView 4.13.0、sqflite 2.4.2 和 fluttertoast 9.0.0，清除旧 Android v1 注册接口的依赖。系统分享插件暂保留原实现，并将仅移除 v1 注册代码的兼容补丁放在 `third_party/share_extend`（来源与变更见该目录的 `NJU_PATCHES.md`），无需修改本机 Pub 缓存。
+
+1. 根据 [Flutter OH 3.35](https://gitcode.com/CPF-Flutter/flutter_flutter/tree/3.35.8-ohos-1.0.4) 配置环境；不要对旧的 OH SDK 运行官方 `flutter upgrade`。
 2. 加载项目环境变量：`source tool/setup_ohos_env.sh` （配好环境之后就只需要每次开发打开终端执行一次）
-3. 安装并使用指定版本：`fvm install oh-3.27.0-release && fvm use 3.27.5-ohos-1.0.3` （这里很奇怪，下载的版本号和cache版本号不一样）
+3. 安装并使用指定版本：`fvm install 3.35.8-ohos-1.0.4 && fvm use 3.35.8-ohos-1.0.4`（FVM 的 Flutter 仓库需配置为 `https://gitcode.com/CPF-Flutter/flutter_flutter.git`）。也可克隆该 tag，并将 `.fvm/flutter_sdk` 链接到 SDK 目录。
 4. 运行 `fvm flutter doctor -v` 检查环境变量配置，Flutter 与 OpenHarmony 都应为 `ok`
 5. 在 `external` 文件夹中 clone 依赖（若尚未 clone）
   * `cd external`
   * `git clone https://gitcode.com/openharmony-tpc/flutter_packages.git` 
-  * `git clone https://gitcode.com/openharmony-sig/flutter_sqflite.git`
   * `git clone https://gitcode.com/nutpi/flutter_plus_plugins_package_info_plus.git`
-  * `git clone https://gitcode.com/openharmony-sig/fluttertpc_mobile_scanner.git`
   * `git clone https://gitcode.com/openharmony-sig/fluttertpc_device_calendar`
 6. 如果在中国大陆网络下载失败，执行：
   * `export USE_CN_FLUTTER_MIRROR=1`
   * `source tool/setup_ohos_env.sh`
 
-### 快速切换构建环境
+Android 构建需要 JDK 17、Android SDK 36、AGP 8.13 / Gradle 8.13。`targetSdkVersion` 沿用 33；新版 Flutter 的最低系统为 Android 7.0（API 24），因此不再支持 Android 6.0。更新后运行 `fvm flutter pub get`，不要手动改 `.pub-cache` 中的扫码插件。iOS 的 UMCommon / UMDevice 固定到带 ARM64 模拟器切片的官方 XCFramework 版本。4.1.0 起主应用最低支持 iOS 15，小组件仍需 iOS 17；真机与模拟器部署下限一致，支持 Xcode 27 构建。
 
-为了在 Android/iOS 与 OHOS 间减少手动操作，可在当前终端直接切换：
+### 使用项目 SDK 构建
 
-* 切到 OHOS 构建环境：`source tool/switch_flutter_env.sh ohos`
-* 切回官方 Flutter（Android/iOS 常用）：`source tool/switch_flutter_env.sh official`
+GitHub Actions 已提供 Android / iOS / HarmonyOS 三端构建，支持无签名校验和手动签名打包；触发方式、产物与 Secrets 配置见 [三端 CI 说明](tool/ci/README.md)。
 
-切换后建议运行 `flutter doctor -v` 或 `fvm flutter doctor -v` 做一次确认，并执行 `flutter clean` 以清除之前环境的构建缓存。
+三端均使用项目固定的 SDK，避免终端切回旧版全局 Flutter：
+
+```bash
+.fvm/flutter_sdk/bin/flutter pub get
+.fvm/flutter_sdk/bin/flutter build apk --release
+.fvm/flutter_sdk/bin/flutter run -d <iOS模拟器UUID>
+.fvm/flutter_sdk/bin/flutter build hap --debug
+```
+
+Apple 芯片 Mac 的 iOS 验证使用指定模拟器的 ARM64 构建。当前 OHOS SDK 的 macOS Release `gen_snapshot` 仍仅提供 x86_64，需通过 Rosetta 运行。若本机尚未安装，可按[苹果官方说明](https://support.apple.com/zh-cn/102527)执行 `softwareupdate --install-rosetta` 并接受许可，再运行 `.fvm/flutter_sdk/bin/flutter build hap --release`。Rosetta 用于 Mac 上的构建工具，输出的鸿蒙应用仍为 ARM64。
+
+鸿蒙入口通过引擎参数 `--no-enable-merged-platform-ui-thread` 保留独立 UI 线程，避免 Flutter 3.35 Release 在平台线程挂载页面时栈溢出、停留白屏。该设置放在项目的 `EntryAbility.getFlutterShellArgs()` 中。

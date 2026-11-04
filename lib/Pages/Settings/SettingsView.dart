@@ -1,9 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 import '../../generated/l10n.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:umeng_common_sdk/umeng_common_sdk.dart';
+import '../../Utils/Analytics.dart';
 import 'package:share_extend/share_extend.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -16,6 +15,7 @@ import '../Lecture/LecturesView.dart';
 import '../About/AboutView.dart';
 import '../AddCourse/AddCourseView.dart';
 import 'MoreSettingsView.dart';
+import 'BackgroundSettingsView.dart';
 import 'WidgetSettingsView.dart';
 import '../Share/ShareView.dart';
 import '../../Components/Toast.dart';
@@ -23,6 +23,7 @@ import '../../Resources/Config.dart';
 import '../../Resources/Url.dart';
 
 import 'Widgets/WeekChanger.dart';
+import '../../core/widget_data/utils/widget_refresh_helper.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({Key? key}) : super(key: key);
@@ -48,7 +49,7 @@ class _SettingsViewState extends State<SettingsView> {
           title: Text(S.of(context).import_manually_title),
           subtitle: Text(S.of(context).import_manually_subtitle),
           onTap: () {
-            UmengCommonSdk.onEvent(
+            Analytics.onEvent(
                 "class_import", {"type": "manual", "action": "show"});
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (BuildContext context) => const AddView()));
@@ -58,7 +59,7 @@ class _SettingsViewState extends State<SettingsView> {
           title: Text(S.of(context).import_title),
           subtitle: Text(S.of(context).import_subtitle),
           onTap: () async {
-            UmengCommonSdk.onEvent(
+            Analytics.onEvent(
                 "class_import", {"type": "auto", "action": "show"});
             bool? status = await Navigator.of(context).push(MaterialPageRoute(
                 builder: (BuildContext context) => const ImportView()));
@@ -70,7 +71,7 @@ class _SettingsViewState extends State<SettingsView> {
         //   title: Text(S.of(context).all_course_title),
         //   subtitle: Text(S.of(context).all_course_subtitle),
         //   onTap: () async {
-        //     UmengCommonSdk.onEvent(
+        //     Analytics.onEvent(
         //         "class_import", {"type": "all", "action": "show"});
         //     bool? status = await Navigator.of(context).push(
         //         MaterialPageRoute(
@@ -82,7 +83,7 @@ class _SettingsViewState extends State<SettingsView> {
           title: Text(S.of(context).view_lecture_title),
           subtitle: Text(S.of(context).view_lecture_subtitle),
           onTap: () async {
-            UmengCommonSdk.onEvent(
+            Analytics.onEvent(
                 "class_import", {"type": "lecture", "action": "show"});
             bool? status = await Navigator.of(context).push(MaterialPageRoute(
                 builder: (BuildContext context) => const LectureView()));
@@ -125,7 +126,7 @@ class _SettingsViewState extends State<SettingsView> {
           title: Text(S.of(context).import_or_export_title),
           subtitle: Text(S.of(context).import_or_export_subtitle),
           onTap: () {
-            UmengCommonSdk.onEvent("qr_import", {"action": "show"});
+            Analytics.onEvent("qr_import", {"action": "show"});
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (BuildContext context) => const ShareView()));
           },
@@ -134,28 +135,35 @@ class _SettingsViewState extends State<SettingsView> {
           title: Text(S.of(context).manage_table_title),
           subtitle: Text(S.of(context).manage_table_subtitle),
           onTap: () {
-            UmengCommonSdk.onEvent("schedule_manage", {"action": "show"});
+            Analytics.onEvent("schedule_manage", {"action": "show"});
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (BuildContext context) => const ManageTableView()));
           },
         ),
         ListTile(
+          key: const ValueKey('background-settings'),
+          title: Text(S.of(context).background_settings_title),
+          subtitle: Text(S.of(context).background_settings_subtitle),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const BackgroundSettingsView())),
+        ),
+        ListTile(
           title: Text(S.of(context).more_settings_title),
           subtitle: Text(S.of(context).more_settings_subtitle),
           onTap: () {
-            UmengCommonSdk.onEvent("more_setting", {"action": "show"});
+            Analytics.onEvent("more_setting", {"action": "show"});
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (BuildContext context) => const MoreSettingsView()));
           },
         ),
-        // Widget settings - iOS only
-        if (Platform.isIOS)
+        // Widget settings - 具备原生小组件实现的平台（iOS / Android）
+        if (WidgetRefreshHelper.isSupportedPlatform)
           ListTile(
             title: Text(S.of(context).widget_and_live_activity_settings_title),
             subtitle:
                 Text(S.of(context).widget_and_live_activity_settings_subtitle),
             onTap: () {
-              UmengCommonSdk.onEvent("widget_setting", {"action": "show"});
+              Analytics.onEvent("widget_setting", {"action": "show"});
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (BuildContext context) =>
                       const WidgetSettingsView()));
@@ -166,7 +174,7 @@ class _SettingsViewState extends State<SettingsView> {
           title: Text(S.of(context).share_title),
           subtitle: Text(S.of(context).share_subtitle),
           onTap: () {
-            UmengCommonSdk.onEvent("app_share", {"action": "show"});
+            Analytics.onEvent("app_share", {"action": "show"});
             ShareExtend.share(S.of(context).share_content, "text");
           },
         ),
@@ -174,7 +182,7 @@ class _SettingsViewState extends State<SettingsView> {
           title: Text(S.of(context).report_title),
           subtitle: Text(S.of(context).report_subtitle),
           onTap: () async {
-            UmengCommonSdk.onEvent("group_add", {"action": "show"});
+            Analytics.onEvent("group_add", {"action": "show"});
             bool status = false;
             if (Platform.isIOS) {
               status = await _launchURL(Url.QQ_GROUP_APPLE_URL);
@@ -188,7 +196,7 @@ class _SettingsViewState extends State<SettingsView> {
             }
           },
           onLongPress: () async {
-            UmengCommonSdk.onEvent("group_add", {"action": "copy"});
+            Analytics.onEvent("group_add", {"action": "copy"});
             if (Platform.isIOS) {
               await Clipboard.setData(
                   const ClipboardData(text: Config.IOS_GROUP));
@@ -212,7 +220,7 @@ class _SettingsViewState extends State<SettingsView> {
                   title: Text(S.of(context).donate_title),
                   subtitle: Text(S.of(context).donate_subtitle),
                   onTap: () async {
-                    UmengCommonSdk.onEvent("donate_click", {"action": "show"});
+                    Analytics.onEvent("donate_click", {"action": "show"});
                     bool status = false;
                     if (Platform.isIOS) {
                       status = await _launchURL(Url.URL_APPLE);
@@ -238,7 +246,7 @@ class _SettingsViewState extends State<SettingsView> {
                 }
               }),
           onTap: () {
-            UmengCommonSdk.onEvent("about_click", {"action": "show"});
+            Analytics.onEvent("about_click", {"action": "show"});
             Navigator.of(context).push(MaterialPageRoute(
                 builder: (BuildContext context) => const AboutView()));
           },

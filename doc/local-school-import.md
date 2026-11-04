@@ -10,13 +10,13 @@
 4. 启动：
 
    ```bash
-   yes | fvm flutter run --dart-define=USE_LOCAL_IMPORT_CONFIG=true
+   .fvm/flutter_sdk/bin/flutter run --dart-define=USE_LOCAL_IMPORT_CONFIG=true
    ```
 
    已经完成依赖解析时使用 `--no-pub`：
 
    ```bash
-   yes | fvm flutter run --no-pub --dart-define=USE_LOCAL_IMPORT_CONFIG=true
+   .fvm/flutter_sdk/bin/flutter run --no-pub --dart-define=USE_LOCAL_IMPORT_CONFIG=true
    ```
 
 5. 在导入页选择目标学校，完成真实登录并检查课程、周次、星期、开始节数、持续节数、教师和地点。

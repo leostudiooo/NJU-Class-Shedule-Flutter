@@ -7,7 +7,6 @@
          FlutterApplication and put your custom class here. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
@@ -70,5 +69,40 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- 课表桌面小组件，对应 iOS 端的 ScheduleWidget Extension -->
+        <receiver
+            android:name=".widget.ScheduleWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_schedule_small_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- 系统时间 / 时区 / 日期变化都会影响上课状态判定，需要重绘 -->
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+                <action android:name="com.lilystudio.wheretosleepinnju.widget.ACTION_REFRESH" />
+                <action android:name="com.lilystudio.wheretosleepinnju.widget.ACTION_SCHEDULED_UPDATE" />
+                <action android:name="com.lilystudio.wheretosleepinnju.widget.ACTION_COURSE_ARRIVED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_schedule_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.ScheduleMediumWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_schedule_medium_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_schedule_medium_info" />
+        </receiver>
+        <service
+            android:name=".widget.ScheduleWidgetService"
+            android:permission="android.permission.BIND_REMOTEVIEWS"
+            android:exported="false" />
     </application>
 </manifest>

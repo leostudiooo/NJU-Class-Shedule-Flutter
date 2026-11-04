@@ -3,32 +3,17 @@ import Flutter
 import WidgetKit
 import ActivityKit
 
-class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-  var window: UIWindow?
-
-  func scene(
-    _ scene: UIScene,
-    willConnectTo session: UISceneSession,
-    options connectionOptions: UIScene.ConnectionOptions
-  ) {
-    guard scene is UIWindowScene,
-          let flutterViewController = window?.rootViewController as? FlutterViewController,
-          let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-      return
-    }
-
-    appDelegate.configureFlutterViewController(flutterViewController)
-  }
-}
-
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterPluginRegistrant {
   private var widgetDataChannel: FlutterMethodChannel?
 
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // With UIScene the Flutter controller is created after didFinishLaunching.
+    // Let that controller register plugins against its own engine.
+    pluginRegistrant = self
     setupSystemTimeChangeObserver()
 
 //     MobClick.handle(url)
@@ -38,12 +23,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  func configureFlutterViewController(_ controller: FlutterViewController) {
-    GeneratedPluginRegistrant.register(with: controller)
+  func register(with registry: FlutterPluginRegistry) {
+    GeneratedPluginRegistrant.register(with: registry)
+  }
 
-    // Set up widget data method channel after the scene has created its
-    // FlutterViewController and its plugin registry is ready.
-    setupWidgetDataChannel(controller)
+  func connectSceneWindow(_ sceneWindow: UIWindow) {
+    window = sceneWindow
+    setupWidgetDataChannel()
   }
 
   private func setupSystemTimeChangeObserver() {
@@ -61,7 +47,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     print("🔄 [AppDelegate] Significant time change detected, widget timelines reloaded")
   }
 
-  private func setupWidgetDataChannel(_ controller: FlutterViewController) {
+  private func setupWidgetDataChannel() {
+    guard let controller = window?.rootViewController as? FlutterViewController else {
+      print("Failed to get FlutterViewController")
+      return
+    }
+
     widgetDataChannel = FlutterMethodChannel(
       name: "com.wheretosleepinnju/widget_data",
       binaryMessenger: controller.binaryMessenger
@@ -131,6 +122,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     // Save to UserDefaults (App Group)
     print("🔐 [AppDelegate] Attempting to access App Group: \(kAppGroupIdentifier)")
+
+    // A named UserDefaults suite can exist without App Group access, in which
+    // case writes stay in the app sandbox and the extension never sees them.
+    guard FileManager.default.containerURL(
+      forSecurityApplicationGroupIdentifier: kAppGroupIdentifier
+    ) != nil else {
+      result(FlutterError(code: "APP_GROUP_ERROR",
+                          message: "App Group container unavailable; check signing entitlements",
+                          details: nil))
+      return
+    }
 
     if let appGroup = UserDefaults(suiteName: kAppGroupIdentifier) {
       print("✅ [AppDelegate] App Group accessed successfully")
@@ -415,4 +417,40 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 //       //其它第三方处理
 //       return true
 //   }
+}
+
+
+/// FlutterSceneDelegate forwards URL and shortcut events to registered plugins.
+@objc class SceneDelegate: FlutterSceneDelegate {
+  override func scene(
+    _ scene: UIScene,
+    willConnectTo session: UISceneSession,
+    options connectionOptions: UIScene.ConnectionOptions
+  ) {
+    super.scene(scene, willConnectTo: session, options: connectionOptions)
+    guard let sceneWindow = window else { return }
+    (UIApplication.shared.delegate as? AppDelegate)?.connectSceneWindow(sceneWindow)
+    // Cold launches receive URLs in connectionOptions rather than openURLContexts.
+    if !connectionOptions.urlContexts.isEmpty {
+      self.scene(scene, openURLContexts: connectionOptions.urlContexts)
+    }
+  }
+
+  override func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+    for context in URLContexts {
+      var options: [UIApplication.OpenURLOptionsKey: Any] = [
+        .openInPlace: context.options.openInPlace
+      ]
+      if let source = context.options.sourceApplication {
+        options[.sourceApplication] = source
+      }
+      if let annotation = context.options.annotation {
+        options[.annotation] = annotation
+      }
+      _ = appDelegate.application(UIApplication.shared, open: context.url, options: options)
+      NSLog("[SceneLifecycle] URL forwarded to app delegate: %@", context.url.host ?? "")
+    }
+  }
+
 }

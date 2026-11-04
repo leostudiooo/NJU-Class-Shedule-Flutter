@@ -312,28 +312,30 @@ class ImportFromBEViewState extends State<ImportFromBEView> {
                 child: Column(
                   children: [
                     Expanded(
-                      child: ListView.builder(
-                        itemCount: terms.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final term = terms[index];
-                          final start = term['start']?.toString();
-                          final dm = term['dm']?.toString() ?? '';
-                          final subtitle = start == null || start.isEmpty
-                              ? '$dm · 开学日期未发布'
-                              : '$dm · 开学：$start';
-
-                          return RadioListTile<int>(
-                            dense: true,
-                            value: index,
-                            groupValue: selectedIndex,
-                            title: Text(term['name']?.toString() ?? dm),
-                            subtitle: Text(subtitle),
-                            onChanged: (int? value) {
-                              if (value == null) return;
-                              setDialogState(() => selectedIndex = value);
-                            },
-                          );
+                      child: RadioGroup<int>(
+                        groupValue: selectedIndex,
+                        onChanged: (int? value) {
+                          if (value == null) return;
+                          setDialogState(() => selectedIndex = value);
                         },
+                        child: ListView.builder(
+                          itemCount: terms.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final term = terms[index];
+                            final start = term['start']?.toString();
+                            final dm = term['dm']?.toString() ?? '';
+                            final subtitle = start == null || start.isEmpty
+                                ? '$dm · 开学日期未发布'
+                                : '$dm · 开学：$start';
+
+                            return RadioListTile<int>(
+                              dense: true,
+                              value: index,
+                              title: Text(term['name']?.toString() ?? dm),
+                              subtitle: Text(subtitle),
+                            );
+                          },
+                        ),
                       ),
                     ),
                     if (selectedTerm['start'] == null)

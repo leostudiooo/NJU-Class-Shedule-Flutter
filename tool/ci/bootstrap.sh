@@ -2,9 +2,15 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-# Keep these commits aligned with .fvmrc and the path dependencies in pubspec.yaml.
+# .fvmrc is the version authority; fail loudly instead of installing a stale SDK.
 flutter_ref=3.35.8-ohos-1.0.4
 flutter_commit=8320f6ded3f0bdc5409545e26dcd2596bf054203
+
+fvmrc_ref="$(sed -n 's/.*"flutter"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .fvmrc)"
+if [[ -n "$fvmrc_ref" && "$fvmrc_ref" != "$flutter_ref" ]]; then
+  echo "bootstrap.sh pins flutter_ref=$flutter_ref but .fvmrc says $fvmrc_ref; update both." >&2
+  exit 1
+fi
 checkout_dependency() {
   local destination=$1 remote=$2 commit=$3 tag=${4:-}
   local ref=$commit tag_commit=$commit

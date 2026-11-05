@@ -20,7 +20,7 @@ bash tool/ci/bootstrap.sh
 - 构建、依赖与 CI 流程以 [`tool/ci/README.md`](tool/ci/README.md) 和 [`.github/workflows/build.yml`](.github/workflows/build.yml) 为准；本地环境需与 CI 保持一致，不要混用全局 FVM 版本。
 - 依赖、Pod 或 Xcode 构建失败时，先查参考文档，再检查 `git status` 和 `pubspec.lock`，避免无意升级或覆盖已有修复。
 - 稳定文档索引由 Git `pre-commit` hook 自动生成；修改或新增 `doc/*.md` 后不要手工编辑 `doc/index.md`。首次使用仓库时运行 `tool/install_git_hooks.sh`。
-- 稳定文档规范见 [`doc/documentation-standard.md`](doc/documentation-standard.md)；文档描述的事实发生变化时，在同一变更中更新对应主题文档。
+- `doc/` 只放代码读不出来的稳定事实：先问「删掉它谁会犯什么错」，答不出就不要建文件。新建用 `tool/new_doc.sh <name> "<title>"`，格式见 [`doc/documentation-standard.md`](doc/documentation-standard.md)；`doc/index.md` 自动生成，不要手改。
 
 # For OpenAI ChatGPT Codex Agents
 

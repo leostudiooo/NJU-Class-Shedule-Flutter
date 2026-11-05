@@ -57,6 +57,8 @@ jobs:
         with:
           persist-credentials: false
           submodules: false
+      - name: Documentation index is up to date
+        run: tool/build_doc_index.sh --check
       - uses: actions/cache@v4
         with:
           path: |

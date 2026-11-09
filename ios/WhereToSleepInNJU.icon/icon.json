@@ -28,7 +28,7 @@
           "hidden" : false,
           "image-name-specializations" : [
             {
-              "value" : "bottom.png"
+              "value" : "Bottom.png"
             },
             {
               "appearance" : "light",
